@@ -13,6 +13,7 @@ const userName = document.getElementById('userName');
 const productForm = document.querySelector('#productForm');
 const productsBtn = document.getElementById('productsBtn');
 const productoName = document.getElementById('floatingInputName');
+const productoStock = document.getElementById('floatingInputStock');
 const productoPrice = document.getElementById('floatingInputPrice');
 const productoUrl = document.getElementById('floatingInputUrl');
 const table = document.getElementById('tableproductData');
@@ -43,24 +44,6 @@ socket.on('usuario', async data => {
         userForm.classList = 'userInfoRemove';
         userName.textContent = usuario.name;
         userInteraction.classList.remove('productInfoRemoved');
-
-        try {
-            const res = await fetch('http://localhost:8080/db/chat.json');
-            const data = await res.json();
-
-            const html = `
-                {{#each data}}
-                    <p><span class="fw-bold text-primary">{{ email }}</span> <span class="fw-normal brown">{{ date }}: </span><span class="fst-italic text-success">{{ message }}</span></p>
-                {{/each}}
-            `;
-            
-            const template = Handlebars.compile(html);
-            const oldMessages = template({data});
-        
-            chatContainer.innerHTML = oldMessages;            
-        } catch(err) {
-            console.log('Error al traer los datos:', err.message);
-        };    
     };
 });
 
@@ -68,7 +51,7 @@ socket.on('usuario', async data => {
 productsBtn.onclick = e => {
     e.preventDefault();
 
-    let product = { name: productoName.value, price: productoPrice.value, url: productoUrl.value };
+    let product = { name: productoName.value, price: productoPrice.value, url: productoUrl.value, stock: productoStock.value };
     productForm.reset();
 
     socket.emit('product', product);
@@ -83,6 +66,7 @@ socket.on('allProducts', newInfo => {
             <tr>
                 <th scope="row" class="text-center">{{ name }}</th>
                 <td class="text-center">$ {{ price }}</td>
+                <td class="text-center">{{ stock }}</td>
                 <td class="text-center">
                     <img height="75px" width="120px" src={{ url }} alt={{ name }} />
                 </td>
