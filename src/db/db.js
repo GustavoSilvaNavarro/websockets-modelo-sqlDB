@@ -24,6 +24,5 @@ const configSQLite3 = {
   useNullAsDefault: true
 };
 
-const connectionDB = knex(configMariaDB);
-
-export default connectionDB;
+export const connectionDB = knex(configMariaDB);
+export const connectionSQL = knex(configSQLite3);

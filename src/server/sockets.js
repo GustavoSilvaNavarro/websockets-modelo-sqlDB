@@ -1,5 +1,5 @@
-import connectionDB from '../db/db.js';
 import productsCommands from '../models/product-model.js';
+import chatComands from '../models/chat-model.js';
 
 //WEB SOCKETS EVENTS
 export const socketsEvents = io => {
@@ -10,12 +10,12 @@ export const socketsEvents = io => {
             socket.emit('usuario', user);
 
             try {
-                const tableExist = await connectionDB.schema.hasTable(process.env.MDB_TABLE_NAME_ECOM);
-                const chatTableExist = await connectionDB.schema.hasTable(process.env.MDB_TABLE_NAME_CHATS);
+                const tableExist = await productsCommands.tableExist();
+                const chatTableExist = await chatComands.chatTableExist();
 
 
                 if(tableExist) {
-                    const oldProductsDB = await connectionDB(process.env.MDB_TABLE_NAME_ECOM).select('name', 'price', 'stock', 'url');
+                    const oldProductsDB = await productsCommands.getProducts();
         
                     if(oldProductsDB.length > 0) {
                         io.emit('allProducts', oldProductsDB);
@@ -23,7 +23,7 @@ export const socketsEvents = io => {
                 };
 
                 if(chatTableExist) {
-                    const oldMessData = await connectionDB(process.env.MDB_TABLE_NAME_CHATS).select('email', 'date', 'message');
+                    const oldMessData = await chatComands.getChats();
             
                     if(oldMessData.length > 0) {
                         io.emit('server:messages', oldMessData);
@@ -36,29 +36,10 @@ export const socketsEvents = io => {
 
         socket.on('product', async product => {
             try {
-                const tableExist = await connectionDB.schema.hasTable(process.env.MDB_TABLE_NAME_ECOM);
-
-                if(!tableExist) {
-                    //Create table
-                    await connectionDB.schema.createTable(process.env.MDB_TABLE_NAME_ECOM, products_table => {
-                        products_table.increments('id').unique().notNullable().primary()
-                        products_table.string('name', 50).notNullable()
-                        products_table.timestamp('created_at').defaultTo(connectionDB.fn.now())
-                        products_table.float('price').notNullable()
-                        products_table.integer('stock').notNullable()
-                        products_table.text('url')
-                    });
-
-                    console.log('Table Created!');
-                };
-
-                //Insert value
-                await connectionDB(process.env.MDB_TABLE_NAME_ECOM).insert(product);
-
-                
-                const allProductsData = await connectionDB(process.env.MDB_TABLE_NAME_ECOM).select('name', 'price', 'stock', 'url');
+                await productsCommands.createDataBaseProducts();
+                await productsCommands.insertData(product);
+                const allProductsData = await productsCommands.getProducts();
                 io.emit('allProducts', allProductsData);
-
             } catch (err) {
                 const error = new Error(err.message);
                 return error;
@@ -67,27 +48,13 @@ export const socketsEvents = io => {
 
         socket.on('client:newMessage', async mess => {
             try {
-                const chatTableExist = await connectionDB.schema.hasTable(process.env.MDB_TABLE_NAME_CHATS);
-                
-                if(!chatTableExist) {
-                    //Create table
-                    await connectionDB.schema.createTable(process.env.MDB_TABLE_NAME_CHATS, chat_table => {
-                        chat_table.increments('id').unique().notNullable().primary()
-                        chat_table.string('email', 50).notNullable()
-                        chat_table.timestamp('created_at').defaultTo(connectionDB.fn.now())
-                        chat_table.string('date', 50).notNullable()
-                        chat_table.text('message')
-                    });
-                    
-                    console.log('Table Created!');
-                };
+                await chatComands.createDataBaseChats();
 
                 //Insert value
-                await connectionDB(process.env.MDB_TABLE_NAME_CHATS).insert(mess);
+                await chatComands.insertDataChat(mess);
                 
-                const allMessagesData = await connectionDB(process.env.MDB_TABLE_NAME_CHATS).select('email', 'date', 'message');
+                const allMessagesData = await chatComands.getChats();
                 io.emit('server:messages', allMessagesData);
-
             } catch (err) {
                 const error = new Error(err.message);
                 return error;

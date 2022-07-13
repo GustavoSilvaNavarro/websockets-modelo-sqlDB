@@ -1,28 +1,27 @@
-import { connectionDB } from '../db/db.js'
+import { connectionSQL } from '../db/db.js'
 
-class Products {
-    constructor(connectionDB) {
-        this._connection = connectionDB;
-        this._dbName = process.env.MDB_TABLE_NAME_ECOM;
+class Chats {
+    constructor(connectionSQL) {
+        this._connection = connectionSQL;
+        this._dbName = process.env.MDB_TABLE_NAME_CHATS;
     };
 
     //CREATE DATABASE
-    async createDataBaseProducts() {
+    async createDataBaseChats() {
         try {
-            const tableExist = await this._connection.schema.hasTable(this._dbName);
+            const chatTableExist = await this._connection.schema.hasTable(this._dbName);
 
-            if(!tableExist) {
+            if(!chatTableExist) {
                 //Create table
-                await this._connection.schema.createTable(this._dbName, productsTable => {
-                    productsTable.increments('id').unique().notNullable().primary()
-                    productsTable.string('name', 50).notNullable()
-                    productsTable.timestamp('created_at').defaultTo(this._connection.fn.now())
-                    productsTable.float('price').notNullable()
-                    productsTable.integer('stock').notNullable()
-                    productsTable.text('url')
+                await this._connection.schema.createTable(this._dbName, chat_table => {
+                    chat_table.increments('id').unique().notNullable().primary()
+                    chat_table.string('email', 50).notNullable()
+                    chat_table.timestamp('created_at').defaultTo(this._connection.fn.now())
+                    chat_table.string('date', 50).notNullable()
+                    chat_table.text('message')
                 });
-
-                console.log('Table Created!');
+                
+                console.log('Chat Table Created!');
             };
         } catch (err) {
             const error = new Error(err.message);
@@ -31,7 +30,7 @@ class Products {
     };
 
     //TABLE EXIST
-    async tableExist() {
+    async chatTableExist() {
         try {
             return await this._connection.schema.hasTable(this._dbName);
         } catch (err) {
@@ -41,9 +40,9 @@ class Products {
     };
 
     //INSERT DATA
-    async insertData(product) {
+    async insertDataChat(chat) {
         try {
-            await this._connection(this._dbName).insert(product);
+            await this._connection(this._dbName).insert(chat);
         } catch (err) {
             const error = new Error(err.message);
             return error;
@@ -51,9 +50,9 @@ class Products {
     };
 
     //GET DATA
-    async getProducts() {
+    async getChats() {
         try {
-            return await this._connection(this._dbName).select('name', 'price', 'stock', 'url');
+            return await this._connection(this._dbName).select('email', 'date', 'message');
         } catch (err) {
             const error = new Error(err.message);
             return error;
@@ -61,7 +60,7 @@ class Products {
     };
 
     //Update a product
-    async updateProduct(id, data) {
+    async updateChat(id, data) {
         try {
             const product = data;
             product.id = id;
@@ -73,7 +72,7 @@ class Products {
     };
 
     //Delete a product
-    async deleteProduct(id) {
+    async deleteChat(id) {
         try {
             await this._connection(this._dbName).where({ id }).del();
         } catch (err) {
@@ -83,4 +82,4 @@ class Products {
     };
 };
 
-export default new Products(connectionDB);
+export default new Chats(connectionSQL);
