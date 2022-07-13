@@ -1,4 +1,5 @@
 import connectionDB from '../db/db.js';
+import productsCommands from '../models/product-model.js';
 
 //WEB SOCKETS EVENTS
 export const socketsEvents = io => {
